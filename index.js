@@ -1,49 +1,38 @@
-/* Import Readline Module For User Input */
 const readline = require('readline');
 
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
-/* Create Player Class */
 class Player {
-    constructor(name, totalCoins, status, hasStar) {
-        this.name = String(name),
-        this.totalCoins = Number(totalCoins),
-        this.status = String(status),
-        this.hasStar = Boolean(hasStar)
+    constructor(name = null, totalCoins = 0, status = "Small", hasStar = false) {
+        this.name = String(name);
+        this.totalCoins = Number(totalCoins);
+        this.status = String(status);
+        this.hasStar = Boolean(hasStar);
     }
 
-    setName(namePicked) {
-        /* If User Doesn't Pick Mario or Luigi as Their Name, They Will Get Prompted to Enter a Name Again */
-        if (namePicked === "mario" || namePicked === "luigi") {
-            this.name = namePicked;
-        }
-        else {
-            console.log('You Have Entered an Invalid Name, Please Choose Mario or Luigi: ');
-            this.setName(namePicked);
-        }
+    setName(chosenName) {
+        this.name = chosenName;
     }
 
     gotHit() {
-        /* Each Time a Player Gets Hit, Their Status Drops */
         if (this.status === "Powered Up") {
             this.status = "Big";
-        }
-        else if (this.status === "Big") {
+        } else if (this.status === "Big") {
             this.status = "Small";
-        }
-        else {
+        } else {
             this.status = "Dead";
         }
     }
 
     gotPowerUp() {
-        /* When a Player Receives a Power Up, Their Status Will Go Up Accordingly */
         if (this.status === "Small") {
             this.status = "Big";
-        }
-        else if (this.status === "Big") {
+        } else if (this.status === "Big") {
             this.status = "Powered Up";
-        }
-        else {
+        } else {
             this.hasStar = true;
         }
     }
@@ -54,18 +43,49 @@ class Player {
 
     print() {
         if (this.status === "Dead") {
-            console.log(`Name: ${this.name} \n Status: ${this.status} \n Total Coins After Death: ${this.totalCoins}`)
-        }
-        else if (this.hasStar === true) {
-            console.log(`Name: ${this.name} \n Status: ${this.status} \n Total Coins: ${this.totalCoins} \n You Have a Star!`)
-        }
-        else {
-            console.log(`Name: ${this.name} \n Status: ${this.status} \n Total Coins: ${this.totalCoins}`)
+            console.log(`\n Name: ${this.name}\n Status: ${this.status}\n Total Coins After Death: ${this.totalCoins}`);
+        } else if (this.hasStar === true) {
+            console.log(`\n Name: ${this.name}\n Status: ${this.status}\n Total Coins: ${this.totalCoins}\n You Have a Star!`);
+        } else {
+            console.log(`\n Name: ${this.name}\n Status: ${this.status}\n Total Coins: ${this.totalCoins}`);
         }
     }
 }
 
-const startGame = (namePicked) => {
-    namePicked = readline.question('Please Enter Mario or Luigi as Your Name: ').toLowerCase();
-    let player = new Player(namePicked, totalCoins = 0, level = "Small", hasStar = false);
-}
+const startGame = () => {
+    let intervalID;
+    const randomRange = (min = 0, max = 2) => Math.floor(Math.random() * (max - min + 1)) + min;
+    let player;
+
+    rl.question('Please Enter Mario or Luigi as Your Name: ', (nameEntered) => {
+        if (nameEntered.toLowerCase() !== "mario" && nameEntered.toLowerCase() !== "luigi") {
+            console.log("That is Not a Valid Name. Please Enter Mario or Luigi as Your Name");
+            startGame();
+        } else {
+            player = new Player(nameEntered);
+            console.log(`Your Chosen Name is: ${nameEntered}`);
+            rl.close();
+            gameLoop();
+        }
+    });
+
+    const gameLoop = () => {
+        intervalID = setInterval(() => {
+            let randomNumber = randomRange();
+            if (randomNumber === 0) {
+                player.gotHit();
+            } else if (randomNumber === 1) {
+                player.gotPowerUp();
+            } else {
+                player.addCoin();
+            }
+            player.print();
+            if (player.status === "Dead") {
+                clearInterval(intervalID);
+                console.log("\n Player is Dead. Game Over.");
+            }
+        }, 2000);
+    };
+};
+
+startGame();
